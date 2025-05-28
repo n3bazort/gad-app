@@ -1,0 +1,36 @@
+# Node modules
+node_modules/
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.*.local
+
+# Angular build
+/frontend-gad-jaramijo/.angular/cache/
+/frontend-gad-jaramijo/.angular/config.json
+
+# Editor settings
+.vscode/
+.idea/
+*.swp
+
+# Compiled typescript
+*.tsbuildinfo
+
+# Docker volumes
+**/postgres-data/
+
+# Others
+coverage/
