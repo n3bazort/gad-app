@@ -6,14 +6,22 @@ import {
     Delete,
     Param,
     Body,
+    UseGuards,
+    ParseIntPipe,
+    HttpCode,
+    HttpStatus,
 } from '@nestjs/common';
 import { UsuariosService } from './usuarios.service';
 import { Usuario } from './usuario.entity';
+import { CreateUsuarioDto, UpdateUsuarioDto } from './dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
 
 @Controller('usuarios')
+@UseGuards(JwtAuthGuard)
 export class UsuariosController {
-    constructor(private readonly myServiciosUsuario:  UsuariosService;
-) {}
+    constructor(private readonly myServiciosUsuario: UsuariosService) {}
 
     /**
      * Obtiene la lista de todos los usuarios.
@@ -30,28 +38,38 @@ export class UsuariosController {
     @Get(':id')
     findOne(@Param('id') id: number): Promise<Usuario> {
         return this.myServiciosUsuario.findOne(id);
-    }
-
-    /**
+    }    /**
      * Crea un nuevo usuario.
-     * @param usuario Datos del usuario a crear.
+     * @param createUsuarioDto Datos del usuario a crear.
      */
     @Post()
-    create(@Body() usuario: Usuario): Promise<Usuario> {
+    @UseGuards(RolesGuard)
+    @Roles('admin')
+    @HttpCode(HttpStatus.CREATED)
+    create(@Body() createUsuarioDto: CreateUsuarioDto): Promise<Usuario> {
+        const usuario = new Usuario();
+        usuario.nombre = createUsuarioDto.nombre;
+        usuario.correo = createUsuarioDto.correo;
+        usuario.password = createUsuarioDto.password; // Se encriptará en el servicio
+        usuario.rol = createUsuarioDto.rol || 'usuario';
+        usuario.activo = createUsuarioDto.activo !== undefined ? createUsuarioDto.activo : true;
+        
         return this.myServiciosUsuario.create(usuario);
     }
 
     /**
      * Actualiza un usuario por su ID.
      * @param id ID del usuario.
-     * @param usuario Datos actualizados del usuario.
+     * @param updateUsuarioDto Datos actualizados del usuario.
      */
     @Put(':id')
+    @UseGuards(RolesGuard)
+    @Roles('admin')
     update(
-        @Param('id') id: number,
-        @Body() usuario: Usuario
+        @Param('id', ParseIntPipe) id: number,
+        @Body() updateUsuarioDto: UpdateUsuarioDto
     ): Promise<Usuario> {
-        return this.myServiciosUsuario.update(id, usuario);
+        return this.myServiciosUsuario.update(id, updateUsuarioDto);
     }
 
     /**
@@ -59,7 +77,10 @@ export class UsuariosController {
      * @param id ID del usuario.
      */
     @Delete(':id')
-    remove(@Param('id') id: number): Promise<void> {
+    @UseGuards(RolesGuard)
+    @Roles('admin')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
         return this.myServiciosUsuario.remove(id);
     }
 }
