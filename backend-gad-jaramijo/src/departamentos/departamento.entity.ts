@@ -1,5 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne } from 'typeorm';
-import { PermisoUsuarioDepartamento } from '../permisos/permiso.entity';
+import { Direccion } from '../direcciones/direccion.entity';
+import { Usuario } from '../usuarios/usuario.entity';
+import { Permiso } from '../permisos/permiso.entity';
 
 @Entity()
 export class Departamento {
@@ -12,12 +14,15 @@ export class Departamento {
   @Column({ nullable: true })
   descripcion: string;
 
-  @ManyToOne(() => Departamento, (dep) => dep.subdepartamentos, { nullable: true, onDelete: 'SET NULL' })
-  padre: Departamento;
+  @Column({ default: true })
+  estado: boolean;
 
-  @OneToMany(() => Departamento, (dep) => dep.padre)
-  subdepartamentos: Departamento[];
+  @ManyToOne(() => Direccion, (direccion) => direccion.departamentos, { nullable: false, onDelete: 'RESTRICT' })
+  direccion: Direccion;
 
-  @OneToMany(() => PermisoUsuarioDepartamento, (permiso) => permiso.departamento)
-  permisos: PermisoUsuarioDepartamento[];
+  @OneToMany(() => Usuario, (usuario) => usuario.departamento)
+  usuarios: Usuario[];
+
+  @OneToMany(() => Permiso, (permiso) => permiso.departamento)
+  permisos: Permiso[];
 }

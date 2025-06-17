@@ -12,8 +12,9 @@ El proyecto está organizado en varios módulos:
 
 - **Auth**: Autenticación y autorización con JWT
 - **Usuarios**: Gestión de usuarios
-- **Departamentos**: Gestión de departamentos y subdepartamentos
-- **Permisos**: Gestión de permisos de usuario por departamento
+- **Direcciones**: Gestión de direcciones administrativas
+- **Departamentos**: Gestión de departamentos pertenecientes a direcciones
+- **Permisos**: Gestión de permisos de usuario por departamento y dirección
 
 ## Requisitos
 
@@ -62,21 +63,30 @@ docker run --name postgres-gad -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin
 - `PUT /api/usuarios/:id`: Actualiza un usuario (requiere rol "admin")
 - `DELETE /api/usuarios/:id`: Elimina un usuario (requiere rol "admin")
 
+### Direcciones
+
+- `GET /api/direcciones`: Obtiene todas las direcciones
+- `GET /api/direcciones/:id`: Obtiene una dirección específica
+- `POST /api/direcciones`: Crea una nueva dirección (requiere rol "admin")
+- `PUT /api/direcciones/:id`: Actualiza una dirección (requiere rol "admin")
+- `DELETE /api/direcciones/:id`: Elimina una dirección (requiere rol "admin")
+
 ### Departamentos
 
 - `GET /api/departamentos`: Obtiene todos los departamentos
-- `GET /api/departamentos/:id`: Obtiene un departamento específico con sus subdepartamentos
-- `GET /api/departamentos/jerarquia/completa`: Obtiene la jerarquía completa de departamentos
+- `GET /api/departamentos/:id`: Obtiene un departamento específico
 - `POST /api/departamentos`: Crea un nuevo departamento (requiere rol "admin")
 - `PUT /api/departamentos/:id`: Actualiza un departamento (requiere rol "admin")
 - `DELETE /api/departamentos/:id`: Elimina un departamento (requiere rol "admin")
 
 ### Permisos
 
-- `GET /api/permisos`: Obtiene todos los permisos
+- `GET /api/permisos`: Obtiene todos los permisos (requiere rol "admin")
+- `GET /api/permisos/:id`: Obtiene un permiso específico (requiere rol "admin")
 - `GET /api/permisos/usuario/:id`: Obtiene permisos para un usuario específico
-- `POST /api/permisos`: Asigna un nuevo permiso
-- `DELETE /api/permisos/:id`: Elimina un permiso
+- `POST /api/permisos`: Crea un nuevo permiso (requiere rol "admin")
+- `PUT /api/permisos/:id`: Actualiza un permiso (requiere rol "admin")
+- `DELETE /api/permisos/:id`: Elimina un permiso (requiere rol "admin")
 
 ## Modelos de datos
 
@@ -89,6 +99,26 @@ docker run --name postgres-gad -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin
   password: string; // Encriptada
   rol: string; // 'admin', 'usuario', etc.
   activo: boolean;
+  numero_cedula: string;
+  fecha_nacimiento: Date;
+  fecha_registro: Date;
+  fecha_salida: Date;
+  celular: string;
+  contacto_emergencia: string;
+  direccion: Direccion;
+  departamento: Departamento;
+}
+```
+
+### Direccion
+```typescript
+{
+  id: number;
+  nombre: string;
+  estado: boolean;
+  departamentos: Departamento[];
+  usuarios: Usuario[];
+  permisos: Permiso[];
 }
 ```
 
@@ -98,8 +128,8 @@ docker run --name postgres-gad -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin
   id: number;
   nombre: string;
   descripcion: string;
-  padre?: Departamento; // Relación jerárquica
-  subdepartamentos?: Departamento[];
+  estado: boolean;
+  direccion: Direccion; // Relación con dirección
 }
 ```
 
@@ -107,7 +137,9 @@ docker run --name postgres-gad -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=admin
 ```typescript
 {
   id: number;
+  fecha_registro: Date;
   usuario: Usuario;
+  direccion: Direccion;
   departamento: Departamento;
   nivel: string; // 'lectura', 'escritura', 'admin'
 }
@@ -129,18 +161,26 @@ curl -X POST http://localhost:3000/api/auth/login \
   -d '{"correo":"admin@gadjaramijo.gob.ec", "password":"123456"}'
 ```
 
-### Crear un departamento (con token JWT)
+### Crear una dirección (con token JWT)
 ```bash
-curl -X POST http://localhost:3000/api/departamentos \
+curl -X POST http://localhost:3000/api/direcciones \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer [TOKEN]" \
-  -d '{"nombre":"DIRECCIÓN FINANCIERA", "descripcion":"Gestión presupuestaria y contable"}'
+  -d '{"nombre":"DIRECCIÓN ADMINISTRATIVA", "estado":true}'
 ```
 
-### Crear un subdepartamento
+### Crear un departamento
 ```bash
 curl -X POST http://localhost:3000/api/departamentos \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer [TOKEN]" \
-  -d '{"nombre":"Presupuesto", "descripcion":"Área de presupuesto", "padreId":1}'
+  -d '{"nombre":"Recursos Humanos", "descripcion":"Gestión del personal", "direccionId":1, "estado":true}'
+```
+
+### Asignar un permiso
+```bash
+curl -X POST http://localhost:3000/api/permisos \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer [TOKEN]" \
+  -d '{"usuarioId":1, "direccionId":1, "departamentoId":1, "nivel":"admin"}'
 ```

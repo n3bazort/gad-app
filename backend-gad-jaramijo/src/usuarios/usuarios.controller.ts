@@ -21,14 +21,23 @@ import { Roles } from '../auth/roles.decorator';
 @Controller('usuarios')
 @UseGuards(JwtAuthGuard)
 export class UsuariosController {
-    constructor(private readonly myServiciosUsuario: UsuariosService) {}
-
-    /**
-     * Obtiene la lista de todos los usuarios.
+    constructor(private readonly myServiciosUsuario: UsuariosService) {}    /**
+     * Obtiene la lista de todos los usuarios activos.
      */
     @Get()
     findAll(): Promise<Usuario[]> {
-        return this.myServiciosUsuario.findAll();
+        return this.myServiciosUsuario.findAll(false);
+    }
+    
+    /**
+     * Obtiene la lista de todos los usuarios (incluidos inactivos).
+     * Solo para administradores.
+     */
+    @Get('todos')
+    @UseGuards(RolesGuard)
+    @Roles('admin')
+    findAllWithInactive(): Promise<Usuario[]> {
+        return this.myServiciosUsuario.findAll(true);
     }
 
     /**
@@ -47,14 +56,7 @@ export class UsuariosController {
     @Roles('admin')
     @HttpCode(HttpStatus.CREATED)
     create(@Body() createUsuarioDto: CreateUsuarioDto): Promise<Usuario> {
-        const usuario = new Usuario();
-        usuario.nombre = createUsuarioDto.nombre;
-        usuario.correo = createUsuarioDto.correo;
-        usuario.password = createUsuarioDto.password; // Se encriptará en el servicio
-        usuario.rol = createUsuarioDto.rol || 'usuario';
-        usuario.activo = createUsuarioDto.activo !== undefined ? createUsuarioDto.activo : true;
-        
-        return this.myServiciosUsuario.create(usuario);
+        return this.myServiciosUsuario.create(createUsuarioDto);
     }
 
     /**

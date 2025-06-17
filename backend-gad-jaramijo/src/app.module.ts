@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsuariosModule } from './usuarios/usuarios.module';
 import { DepartamentosModule } from './departamentos/departamentos.module';
+import { DireccionesModule } from './direcciones/direcciones.module';
 import { PermisosModule } from './permisos/permisos.module';
 import { AuthModule } from './auth/auth.module';
 
@@ -28,6 +29,7 @@ import { AuthModule } from './auth/auth.module';
     }),
     UsuariosModule,
     DepartamentosModule,
+    DireccionesModule,
     PermisosModule,
     AuthModule,
   ],

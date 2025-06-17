@@ -42,10 +42,9 @@ export class DepartamentosController {
 
   /**
    * Retorna la jerarquía completa de departamentos en estructura anidada.
-   */
-  @Get('jerarquia/completa')
-  getJerarquia(): Promise<Departamento[]> {
-    return this.departamentosService.getJerarquia();
+   */  @Get('direccion/:direccionId')
+  getDepartamentosByDireccion(@Param('direccionId', ParseIntPipe) direccionId: number): Promise<Departamento[]> {
+    return this.departamentosService.getDepartamentosByDireccion(direccionId);
   }
   /**
    * Crea un nuevo departamento.
