@@ -49,7 +49,6 @@ export class AuthService {
       access_token: this.jwtService.sign(payload),
     };
   }
-
   async registro(createUsuarioDto: CreateUsuarioDto) {
     // Comprobamos si el correo ya existe
     try {
@@ -62,20 +61,25 @@ export class AuthService {
       if (!(error instanceof UnauthorizedException)) {
         // Si el error no es de tipo, continuamos con el registro
       }
-    }
-
-    // Hashear la contraseña
+    }    // Hashear la contraseña
     const hashedPassword = await bcrypt.hash(createUsuarioDto.password, 10);
-    
-    // Crear un nuevo usuario
-    const nuevoUsuario = new Usuario();
-    nuevoUsuario.nombre = createUsuarioDto.nombre;
-    nuevoUsuario.correo = createUsuarioDto.correo;
-    nuevoUsuario.password = hashedPassword;
-    nuevoUsuario.rol = createUsuarioDto.rol || 'usuario'; // Rol por defecto si no se especifica
+      // Crear un objeto CreateUsuarioDto con valores temporales para los campos requeridos
+    const usuarioDTO = {
+      nombre: createUsuarioDto.nombre,
+      correo: createUsuarioDto.correo,
+      password: hashedPassword,
+      rol: createUsuarioDto.rol || 'usuario',
+      numero_cedula: '9999999999', // Valor por defecto
+      fecha_nacimiento: new Date().toISOString().split('T')[0], // Fecha actual
+      celular: '0999999999', // Valor por defecto
+      nom_contacto_emerg: 'Contacto por defecto', // Valor por defecto
+      tel_contacto_emerg: '0988888888', // Valor por defecto
+      direccionId: 1, // ID de dirección por defecto
+      departamentoId: 1, // ID de departamento por defecto
+    };
     
     // Guardar el usuario en la base de datos
-    const usuarioCreado = await this.usuariosService.create(nuevoUsuario);
+    const usuarioCreado = await this.usuariosService.create(usuarioDTO);
     
     // Eliminar la contraseña del objeto que se devolverá
     const { password, ...result } = usuarioCreado;

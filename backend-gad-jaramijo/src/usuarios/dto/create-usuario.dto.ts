@@ -32,17 +32,17 @@ export class CreateUsuarioDto {
   @IsOptional()
   @IsDateString({}, { message: 'Formato de fecha inválido para fecha de salida' })
   fecha_salida?: string;
-    @IsNotEmpty({ message: 'El número de celular es requerido' })
+  @IsNotEmpty({ message: 'El número de celular es requerido' })
   @IsString({ message: 'El número de celular debe ser una cadena de texto' })
   celular: string;
   
   @IsOptional()
   @IsString({ message: 'El nombre del contacto de emergencia debe ser una cadena de texto' })
-  nom_contacto?: string;
+  nom_contacto_emerg?: string;
   
   @IsOptional()
   @IsString({ message: 'El teléfono del contacto de emergencia debe ser una cadena de texto' })
-  tel_contacto?: string;
+  tel_contacto_emerg?: string;
   
   @IsNotEmpty({ message: 'El ID de la dirección es requerido' })
   @IsNumber({}, { message: 'El ID de la dirección debe ser un número' })

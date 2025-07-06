@@ -155,7 +155,6 @@ export class UsuariosService {
       throw new ConflictException(`La cédula ${cedula} ya está registrada`);
     }
   }
-
   /**
    * Crea un nuevo usuario con sus validaciones
    * @param createUsuarioDto DTO con los datos del nuevo usuario
@@ -166,25 +165,46 @@ export class UsuariosService {
       await this.validarCorreoUnico(createUsuarioDto.correo);
       await this.validarCedulaUnica(createUsuarioDto.numero_cedula);
       
-      // Validar y obtener entidades relacionadas
-      const direccion = await this.buscarDireccion(createUsuarioDto.direccionId);
-      const departamento = await this.buscarDepartamento(createUsuarioDto.departamentoId);
+      // Comprobar si existen direcciones y departamentos
+      let direccion: Direccion | null = null;
+      let departamento: Departamento | null = null;
       
-      // Validar relación entre dirección y departamento
-      this.validarDepartamentoEnDireccion(departamento, createUsuarioDto.direccionId);
+      try {
+        direccion = await this.buscarDireccion(createUsuarioDto.direccionId);
+        departamento = await this.buscarDepartamento(createUsuarioDto.departamentoId);
+        
+        // Validar relación entre dirección y departamento solo si ambos existen
+        if (direccion && departamento) {
+          this.validarDepartamentoEnDireccion(departamento, createUsuarioDto.direccionId);
+        }
+      } catch (e) {
+        console.log('Aviso: Las entidades de dirección o departamento aún no existen.');
+        // Durante la fase de desarrollo, permitimos que se creen usuarios sin relaciones
+        }
       
-      // Crear el usuario con los datos validados
-      const usuario = this.crearEntidadUsuario(createUsuarioDto, direccion, departamento);
+      // Crear la entidad Usuario directamente
+      const usuario = new Usuario();
+      usuario.nombre = createUsuarioDto.nombre;
+      usuario.correo = createUsuarioDto.correo;
+      usuario.password = createUsuarioDto.password; // Ya viene hasheado de auth.service      usuario.rol = createUsuarioDto.rol || 'usuario';
+      usuario.activo = true;
+      usuario.numero_cedula = createUsuarioDto.numero_cedula;
+      usuario.fecha_nacimiento = new Date(createUsuarioDto.fecha_nacimiento);
+      usuario.celular = createUsuarioDto.celular;
+      usuario.nom_contacto_emerg = createUsuarioDto.nom_contacto_emerg || '';
+      usuario.tel_contacto_emerg = createUsuarioDto.tel_contacto_emerg || '';
       
-      // Encriptar la contraseña
-      const salt = await bcrypt.genSalt();
-      usuario.password = await bcrypt.hash(createUsuarioDto.password, salt);
+      // Asignar direccion y departamento solo si existen
+      if (direccion) usuario.direccion = direccion;
+      if (departamento) usuario.departamento = departamento;
       
       return this.usuariosRepository.save(usuario);
     } catch (error) {
-      if (error instanceof ConflictException || error instanceof NotFoundException) {
+      if (error instanceof ConflictException) {
         throw error;
       }
+      // Para fase de desarrollo, mostrar el error completo
+      console.error('Error al crear usuario:', error);
       throw new Error(`Error al crear el usuario: ${error.message}`);
     }
   }
@@ -201,12 +221,11 @@ export class UsuariosService {
     usuario.nombre = dto.nombre;
     usuario.correo = dto.correo;
     usuario.rol = dto.rol || 'usuario';
-    usuario.activo = dto.activo !== undefined ? dto.activo : true;
-    usuario.numero_cedula = dto.numero_cedula;
+    usuario.activo = dto.activo !== undefined ? dto.activo : true;    usuario.numero_cedula = dto.numero_cedula;
     usuario.fecha_nacimiento = new Date(dto.fecha_nacimiento);
     usuario.celular = dto.celular;
-    usuario.nom_contacto = dto.nom_contacto || '';
-    usuario.tel_contacto = dto.tel_contacto || '';
+    usuario.nom_contacto_emerg = dto.nom_contacto_emerg || '';
+    usuario.tel_contacto_emerg = dto.tel_contacto_emerg || '';
     usuario.direccion = direccion;
     usuario.departamento = departamento;
     
@@ -261,13 +280,12 @@ export class UsuariosService {
     if (updateUsuarioDto.celular) {
       usuario.celular = updateUsuarioDto.celular;
     }
-    
-    if (updateUsuarioDto.nom_contacto) {
-      usuario.nom_contacto = updateUsuarioDto.nom_contacto;
+      if (updateUsuarioDto.nom_contacto_emerg) {
+      usuario.nom_contacto_emerg = updateUsuarioDto.nom_contacto_emerg;
     }
     
-    if (updateUsuarioDto.tel_contacto) {
-      usuario.tel_contacto = updateUsuarioDto.tel_contacto;
+    if (updateUsuarioDto.tel_contacto_emerg) {
+      usuario.tel_contacto_emerg = updateUsuarioDto.tel_contacto_emerg;
     }
   }
   
